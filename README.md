@@ -1,66 +1,47 @@
-# Wide-column databases in practice: Apache Cassandra vs PostgreSQL
+# Cassandra vs PostgreSQL: a wide-column study
 
-*Étude du modèle NoSQL orienté colonnes : cluster Cassandra, tolérance aux pannes et comparaison chiffrée avec PostgreSQL.*
+Group project for our Information Systems course at ENSGMM (Benin), 2026–2027. Group 4: AGRO Rachidi, ANATO Krisland, HOUNSOUNOU Marius. Supervised by Dr (MC) KONNON Abel.
 
-Group project for the **Information Systems** course, engineering programme in Mathematical Engineering & Modeling, **ENSGMM / UNSTIM** (Abomey, Benin), academic year 2026–2027.
+The full report (in French) is in `report/rapport-modele-oriente-colonnes.pdf`.
 
-**Group 4:** AGRO Rachidi · ANATO Krisland · HOUNSOUNOU Marius. **Supervisor:** Dr (MC) KONNON Abel.
+## What we did
 
-## What this project does
+We started with the theory (Bigtable data model, partition and clustering keys, Murmur3 partitioning, replication, consistency levels), then built a case study around IoT sensors.
 
-1. **Explains the model.** It covers the Bigtable data model, Cassandra vocabulary (keyspace, partition key, clustering key), the comparison with columnar storage and relational databases, partitioning (Murmur3), replication, tunable consistency, and the write and read paths.
-2. **Builds a case study: IoT sensors.** The schema is designed *from the queries* (one table per query), with day bucketing so partitions stay bounded (about 8,640 rows per sensor per day). It runs on a **3-node Cassandra 5.0 cluster in Docker**.
-   - Replication with RF = 3, and partitioning made visible with a second keyspace at RF = 1 (`nodetool getendpoints`).
-   - Fault tolerance: `cass3` was stopped, and query Q1 still succeeded at **QUORUM**.
-   - A query that was not planned for (`ALLOW FILTERING`) shows the model's limit.
-3. **Benchmarks ten years of history.** Data was loaded year by year, about 17.5 million rows in total, with 50 sensors and one reading every 15 minutes. Cassandra and PostgreSQL were measured on the same machine:
+The Cassandra schema was designed from the queries: six queries ended up as four tables. Readings are bucketed by day, so a partition holds about 8,640 rows per sensor and doesn't grow forever.
 
-| Criterion | Cassandra | PostgreSQL |
+We ran it on a 3-node Cassandra 5.0 cluster in Docker with RF = 3. To check fault tolerance, we stopped `cass3` and ran query Q1 again at `QUORUM`: it still answered. The real `cqlsh` and `nodetool` outputs are in `case-study/outputs/`.
+
+Then we loaded ten years of readings, one year at a time (about 17.5 million rows in total), into both Cassandra and PostgreSQL, and timed the same queries on the same machine:
+
+| | Cassandra | PostgreSQL |
 |---|---|---|
-| Key lookup, warm | 3–5 ms, flat from 1 to 10 years | 0.3–1.6 ms, slowly rising |
+| Key lookup (warm) | 3–5 ms, same from 1 to 10 years | 0.3–1.6 ms, slowly rising |
 | Cold read | 15–55 ms | 26–172 ms |
-| Planned aggregate (pre-computed table) | 7 ms | 22 ms |
-| Unplanned query over 10 years | fails at 12 s timeout; 20.7 s when raised | 16–24 s |
+| Planned aggregate | 7 ms | 22 ms |
+| Unplanned query over 10 years | timed out at 12 s (20.7 s with a longer timeout) | 16–24 s |
 | Single-row writes | 2,504 / s | 305 / s |
-| Disk space, 10 years | 349 MB | 1,755 MB |
+| Disk used after 10 years | 349 MB | 1,755 MB |
 
-4. **Migration.** PostgreSQL → Cassandra (export, import, verification scripts).
+Things to keep in mind when reading these numbers: all three nodes ran on one laptop, so they say nothing about adding machines, which is Cassandra's main strength. The timings also include the Python drivers and the Docker network. And we lowered the reading interval from 10 seconds to 15 minutes so the data would fit on the machine.
 
-**Honest limits** (also stated in the report):
+There is also a small PostgreSQL → Cassandra migration in `migration/`.
 
-- All three nodes run on one machine. The measurements say nothing about Cassandra's main strength, which is adding machines.
-- Timings include the Python drivers and the Docker network.
-- The reading frequency was lowered to 15 minutes, from 10 seconds in the assignment.
+## Running it
 
-## Repository layout
-
-```
-report/       rapport-modele-oriente-colonnes.pdf (full report, FR), presentation.pdf, LaTeX sources
-case-study/   cql/setup.cql (schema + data), outputs/ (real cqlsh / nodetool outputs: quorum, failure, endpoints)
-benchmark/    bench.py (load / measure / writes), graphiques.py, schemas, resultats.json (raw results)
-migration/    export.sql, import.cql, migrer.sh, verification scripts
-figures/      screenshots and charts used in the report
-```
-
-## Reproduce
-
-Requirements: Docker, Python 3 with `cassandra-driver`, `psycopg2` and `numpy`.
+You need Docker and Python 3 with `cassandra-driver`, `psycopg2` and `numpy`.
 
 ```bash
-# 3-node cluster (see report, section "Environnement")
 docker network create cass-net
 docker run -d --name cass1 --network cass-net -e MAX_HEAP_SIZE=512M -e HEAP_NEWSIZE=128M cassandra:5.0
-# ... cass2 and cass3 with -e CASSANDRA_SEEDS=cass1, then:
+# start cass2 and cass3 the same way, with -e CASSANDRA_SEEDS=cass1
 docker exec -i cass1 cqlsh < case-study/cql/setup.cql
 
-# Benchmark (PostgreSQL in a local container; the DSN is read from an environment variable)
-export PG_DSN="host=127.0.0.1 port=5433 dbname=iot user=postgres password=<your-local-password>"
+export PG_DSN="host=127.0.0.1 port=5433 dbname=iot user=postgres password=<local password>"
 python benchmark/bench.py init
-python benchmark/bench.py load 1     # repeat for K = 1..10
+python benchmark/bench.py load 1      # then 2, 3 … 10
 python benchmark/bench.py measure 10
 python benchmark/bench.py writes
 ```
 
-## Licence
-
-Report and figures © the authors (Group 4), shared for reading. Code: MIT.
+The report and figures belong to the three of us. The code is under the MIT license.
