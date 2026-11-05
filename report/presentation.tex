@@ -1,0 +1,897 @@
+\documentclass[aspectratio=169,10pt]{beamer}
+
+% ---------- Encodage, langue, police ----------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ---------- Paquets ----------
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{babel,positioning,arrows.meta,calc,shapes.geometric}
+
+% ---------- Couleurs : une teinte d'accent, le reste en gris ----------
+\definecolor{accent}{HTML}{1F3A5F}
+\definecolor{texte}{HTML}{222222}
+\definecolor{gris}{HTML}{6B6B6B}
+\definecolor{fond}{HTML}{F2F2F2}
+
+\setbeamercolor{normal text}{fg=texte,bg=white}
+\setbeamercolor{structure}{fg=accent}
+\setbeamercolor{frametitle}{fg=accent,bg=white}
+\setbeamercolor{title}{fg=accent}
+\setbeamercolor{alerted text}{fg=accent}
+\setbeamercolor{block title}{fg=white,bg=accent}
+\setbeamercolor{block body}{fg=texte,bg=fond}
+\setbeamercolor{footline}{fg=gris}
+\setbeamercolor{caption name}{fg=gris}
+
+% ---------- Gabarits ----------
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{itemize item}{\raisebox{0.25ex}{\color{accent}\rule{0.45em}{0.45em}}}
+\setbeamertemplate{itemize subitem}{\color{gris}\textendash}
+\setbeamertemplate{enumerate item}{\color{accent}\insertenumlabel.}
+\setbeamertemplate{blocks}[default]
+\setbeamertemplate{caption}{\raggedright\footnotesize\color{gris}\insertcaption\par}
+\setbeamerfont{frametitle}{size=\large,series=\bfseries}
+\setbeamerfont{footline}{size=\scriptsize}
+
+\setbeamertemplate{frametitle}{%
+  \vspace*{0.35cm}%
+  \hspace*{-0.1cm}\insertframetitle\par
+  \vspace*{-0.15cm}%
+  {\color{accent!35}\rule{\linewidth}{0.5pt}}%
+}
+\setbeamertemplate{footline}{%
+  \leavevmode
+  \hbox to \paperwidth{%
+    \hspace*{0.45cm}\usebeamerfont{footline}\usebeamercolor[fg]{footline}%
+    Groupe 4 \textbullet{} Modèle NoSQL orienté colonnes\hfill
+    \insertframenumber{} / \inserttotalframenumber\hspace*{0.45cm}}%
+  \vspace*{0.3cm}}
+
+\setbeamertemplate{section page}{%
+  \centering
+  \vfill
+  {\color{gris}\small Partie \insertsectionnumber\par}
+  \vspace{0.2cm}
+  {\usebeamercolor[fg]{title}\Large\bfseries\insertsectionhead\par}
+  \vspace{0.3cm}
+  {\color{accent!35}\rule{0.4\linewidth}{0.5pt}}
+  \vfill}
+\AtBeginSection{\begin{frame}[plain,noframenumbering]\sectionpage\end{frame}}
+
+% ---------- Code ----------
+\lstdefinelanguage{CQL}{
+  morekeywords={CREATE,KEYSPACE,TABLE,WITH,PRIMARY,KEY,INSERT,INTO,VALUES,SELECT,FROM,WHERE,AND,LIMIT,ORDER,BY,CLUSTERING,ALLOW,FILTERING,USE,DESC,ASC,COUNT,MIN,MAX,AVG,TRACING,ON},
+  sensitive=false,
+  morecomment=[l]{//},
+  morestring=[b]',
+}
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\bfseries\color{accent},
+  commentstyle=\itshape\color{gris},
+  backgroundcolor=\color{fond},
+  frame=none,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  upquote=true,
+  showstringspaces=false,
+  xleftmargin=6pt,xrightmargin=6pt,
+  aboveskip=4pt,belowskip=4pt
+}
+\newcommand{\cq}[1]{\texttt{\detokenize{#1}}}
+
+% ---------- Informations ----------
+\title{Modèle NoSQL orienté colonnes}
+\subtitle{Column-Family / Wide-Column}
+\author{AGRO Rachidi \and ANATO Krisland \and HOUNSOUNOU Marius}
+\date{Année universitaire 2026-2027}
+
+\begin{document}
+
+% =====================================================
+\begin{frame}[plain,noframenumbering]
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \centering
+      {\scriptsize\bfseries Université Nationale des Sciences, Technologies,\\Ingénierie et Mathématiques (UNSTIM) d'Abomey\par}
+      \vspace{4pt}
+      \includegraphics[height=1.6cm]{logo_unstim.png}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \centering
+      {\scriptsize\bfseries École Nationale Supérieure de Génie\\Mathématique et Modélisation (ENSGMM)\par}
+      \vspace{4pt}
+      \includegraphics[height=1.6cm]{logo_ensgmm.png}
+    \end{column}
+  \end{columns}
+  \vspace{0.45cm}
+  \centering
+  {\small\color{gris}Unité d'enseignement : Système d'Information\par}
+  \vspace{0.3cm}
+  {\color{accent}\rule{0.8\linewidth}{0.8pt}\par}
+  \vspace{0.15cm}
+  {\usebeamercolor[fg]{title}\LARGE\bfseries Modèle NoSQL orienté colonnes\par}
+  \vspace{0.1cm}
+  {\large\color{gris}Column-Family / Wide-Column\par}
+  \vspace{0.1cm}
+  {\color{accent}\rule{0.8\linewidth}{0.8pt}\par}
+  \vspace{0.4cm}
+  \begin{columns}[T]
+    \begin{column}{0.4\textwidth}
+      \small\textbf{Groupe 4}\\[2pt]
+      AGRO Rachidi\\ANATO Krisland\\HOUNSOUNOU Marius
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      \raggedleft\small\textbf{Sous la supervision de}\\[2pt]
+      Dr (MC). KONNON Abel
+    \end{column}
+  \end{columns}
+  \vfill
+  {\footnotesize\color{gris}Année universitaire 2026-2027\par}
+\end{frame}
+
+% =====================================================
+\begin{frame}{Plan}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{enumerate}
+        \item Contexte et problématique
+        \item Le modèle de données
+        \item Architecture distribuée
+        \item Performances, systèmes et usages
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{enumerate}\setcounter{enumi}{4}
+        \item Étude de cas : capteurs IoT avec Cassandra
+        \item Mesures sur dix ans : Cassandra face à PostgreSQL
+        \item Étude comparative
+        \item Du relationnel au Wide-Column
+        \item Conclusion
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =====================================================
+\section{Contexte et problématique}
+
+\begin{frame}{D'où viennent les bases orientées colonnes ?}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}
+        \item Le relationnel (Codd, 1970) repose sur des jointures et des transactions, sur un serveur unique.
+        \item Un serveur ne grandit pas indéfiniment : avec des millions d'écritures continues, on répartit les données sur de nombreuses machines ordinaires.
+        \item Il faut alors continuer à fonctionner quand l'une d'elles tombe en panne.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \centering
+      \begin{tikzpicture}[font=\footnotesize,
+          ev/.style={circle,fill=accent,inner sep=2pt},
+          lb/.style={anchor=west,align=left,text width=4.2cm}]
+        \draw[gris,thick] (0,0) -- (0,-3.6);
+        \node[ev] at (0,0) {};    \node[lb] at (0.25,0)    {\textbf{2006} Google : Bigtable\\{\color{gris}lignes triées, familles de colonnes}};
+        \node[ev] at (0,-1.2) {}; \node[lb] at (0.25,-1.2) {\textbf{2007} Amazon : Dynamo\\{\color{gris}clé-valeur sans maître, disponible}};
+        \node[ev] at (0,-2.4) {}; \node[lb] at (0.25,-2.4) {\textbf{2008} Facebook : Cassandra\\{\color{gris}modèle Bigtable + architecture Dynamo}};
+        \node[ev] at (0,-3.6) {}; \node[lb] at (0.25,-3.6) {\textbf{2010} Projet Apache\\{\color{gris}aujourd'hui Cassandra 5}};
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Problématique}
+  \vfill
+  \begin{block}{}
+    \centering\large
+    Comment les bases orientées colonnes gèrent-elles efficacement\\des volumes massifs de données distribuées,\\et quels compromis impliquent-elles ?
+  \end{block}
+  \vspace{0.6cm}
+  \begin{itemize}
+    \item Exemple suivi tout au long de l'exposé : un réseau de capteurs de température et d'humidité.
+    \item Avec ces bases, on part des requêtes que l'application devra exécuter ; en relationnel, on part des données.
+  \end{itemize}
+  \vfill
+\end{frame}
+
+% =====================================================
+\section{Le modèle de données}
+
+\begin{frame}{Deux sens du mot \og colonne \fg{}}
+  \centering
+  \resizebox{0.92\textwidth}{!}{%
+  \begin{tikzpicture}[font=\footnotesize,
+    b/.style={draw=gris,minimum height=0.7cm,inner sep=3pt,align=center},
+    lab/.style={font=\small\bfseries,anchor=west}]
+    \node[lab] at (0,3.3) {1. Relationnel (stockage par ligne) : \emph{une ligne = un bloc}};
+    \node[b,fill=black!6,minimum width=5.0cm,anchor=west] (r1) at (0,2.6) {1 | Ali | Cotonou | 1500};
+    \node[b,fill=black!6,minimum width=5.0cm,right=0cm of r1] (r2) {2 | Bio | Abomey | 2300};
+    \node[b,fill=black!6,minimum width=5.0cm,right=0cm of r2] {3 | Zola | Ouidah | 850};
+    \node[lab] at (0,1.6) {2. Stockage colonnaire (analytique) : \emph{une colonne = un bloc}};
+    \node[b,fill=black!12,minimum width=2.4cm,anchor=west] (c1) at (0,0.9) {1 | 2 | 3};
+    \node[b,fill=black!12,minimum width=3.6cm,right=0cm of c1] (c2) {Ali | Bio | Zola};
+    \node[b,fill=black!12,minimum width=5.0cm,right=0cm of c2] (c3) {Cotonou | Abomey | Ouidah};
+    \node[b,fill=black!12,minimum width=4.0cm,right=0cm of c3] {1500 | 2300 | 850};
+    \node[lab] at (0,-0.1) {3. Wide-Column / Column-Family (Cassandra, HBase) : \emph{une clé + des cellules triées}};
+    \node[b,fill=accent,text=white,minimum width=3.0cm,anchor=west,font=\scriptsize] (w1) at (0,-0.8) {clé \texttt{S001}};
+    \node[b,fill=accent!8,minimum width=3.0cm,right=0cm of w1,font=\scriptsize] (w2) {ts1 : temp=27.4};
+    \node[b,fill=accent!8,minimum width=3.0cm,right=0cm of w2,font=\scriptsize] (w3) {ts1 : hum=61};
+    \node[b,fill=accent!8,minimum width=3.0cm,right=0cm of w3,font=\scriptsize] (w4) {ts2 : temp=27.6};
+    \node[b,fill=accent!8,minimum width=3.0cm,right=0cm of w4,font=\scriptsize] {ts2 : hum=60};
+  \end{tikzpicture}}
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item Le stockage colonnaire (ClickHouse, Redshift, Parquet) sert l'analyse : peu de colonnes lues sur beaucoup de lignes.
+    \item Le modèle Wide-Column (Bigtable, Cassandra, HBase, ScyllaDB) sert la distribution et l'écriture massive. C'est notre sujet.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Le modèle de Bigtable}
+  \vspace{0.2cm}
+  \begin{center}
+    \large
+    $(\textit{clé de ligne},\ \textit{famille:colonne},\ \textit{horodatage}) \longmapsto \textit{valeur}$
+  \end{center}
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item Les lignes sont triées par clé : les lectures par plage sont efficaces.
+    \item Les familles de colonnes sont déclarées à l'avance ; les colonnes s'ajoutent librement à l'intérieur.
+    \item Une cellule peut garder plusieurs versions, distinguées par leur horodatage.
+    \item La table est éparse : une colonne sans valeur ne coûte rien, deux lignes peuvent avoir des colonnes différentes.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Le vocabulaire de Cassandra}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \small
+      \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+        \toprule
+        Élément & Rôle \\
+        \midrule
+        Cluster & Ensemble des nœuds \\
+        Keyspace & Regroupe les tables, fixe la réplication \\
+        Table & Partitions décrites par un schéma \\
+        Partition & Lignes de même clé de partition ; unité de répartition \\
+        Ligne & Repérée par sa clé de clustering \\
+        Cellule & Valeur + horodatage (+ TTL) \\
+        \bottomrule
+      \end{tabularx}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{block}{Clé primaire en deux parties}
+        \small
+        \cq{PRIMARY KEY ((sensor_id, day), ts)}\par\medskip
+        La clé de partition \cq{(sensor_id, day)} choisit les nœuds qui stockent la donnée.\par\medskip
+        La clé de clustering \cq{ts} trie les lignes dans la partition.
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Pourquoi \og wide \fg{} ?}
+  Une partition peut contenir un très grand nombre de lignes, triées par la clé de clustering.
+  \vspace{0.5cm}
+  \begin{center}
+  \begin{tikzpicture}[font=\small,
+    hdr/.style={draw=gris,fill=accent,text=white,minimum height=0.75cm,align=center},
+    cell/.style={draw=gris,fill=white,minimum height=0.7cm,minimum width=2.35cm,align=center}]
+    \node[hdr,minimum width=3.4cm] (k) at (0,0) {Clé de partition\\\texttt{(S001, 2026-10-05)}};
+    \node[cell,right=0.3cm of k] (a1) {\texttt{ts=08:00:20}};
+    \node[cell,right=0cm of a1] (a2) {\texttt{temp=27.9}};
+    \node[cell,right=0cm of a2] (a3) {\texttt{hum=60.5}};
+    \node[cell,right=0cm of a3] (a4) {\texttt{bat=88}};
+    \node[cell,below=0cm of a1] (b1) {\texttt{ts=08:00:10}};
+    \node[cell,right=0cm of b1] (b2) {\texttt{temp=27.6}};
+    \node[cell,right=0cm of b2] (b3) {\texttt{hum=60.8}};
+    \node[cell,right=0cm of b3] (b4) {\texttt{bat=88}};
+    \node[cell,below=0cm of b1] (c1) {\texttt{ts=08:00:00}};
+    \node[cell,right=0cm of c1] (c2) {\texttt{temp=27.4}};
+    \node[cell,right=0cm of c2] (c3) {\texttt{hum=61.0}};
+    \node[cell,right=0cm of c3] (c4) {\texttt{bat=88}};
+    \node[below=0.25cm of c1,anchor=north west,font=\footnotesize,text=gris] {\emph{... des milliers de lignes, de la plus récente à la plus ancienne (\texttt{ts DESC})}};
+  \end{tikzpicture}
+  \end{center}
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item Toutes les mesures d'un capteur pour un jour sont stockées ensemble.
+    \item Dans Cassandra, c'est la partition qui joue le rôle de ligne extensible.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Relationnel, colonnaire, Wide-Column}
+  \small
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    Critère & Relationnel & Stockage colonnaire & Wide-Column \\
+    \midrule
+    Unité de stockage & La ligne & La colonne & La partition \\
+    Usage visé & Transactions (OLTP) & Analyse (OLAP) & Écriture et lecture massives, distribuées \\
+    Schéma & Fixe & Fixe & Familles fixes, colonnes souples \\
+    Jointures & Natives & Oui & Non, évitées par la modélisation \\
+    Transactions & ACID complètes & Limitées & Par partition, ou \emph{lightweight} \\
+    Distribution & Difficile & Selon le système & Native \\
+    Modélisation & À partir des données & À partir des analyses & À partir des requêtes \\
+    Exemples & PostgreSQL, MySQL & ClickHouse, Redshift & Cassandra, HBase, ScyllaDB \\
+    \bottomrule
+  \end{tabularx}
+\end{frame}
+
+% =====================================================
+\section{Architecture distribuée}
+
+\begin{frame}{Partitionnement et réplication}
+  \begin{columns}[c]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item Pas de serveur maître : tous les nœuds ont le même rôle.
+        \item Murmur3 transforme la clé de partition en un \emph{token}, entre $-2^{63}$ et $2^{63}-1$.
+        \item Chaque nœud possède des plages de l'anneau (\emph{vnodes}) ; ajouter un nœud ne déplace qu'une fraction des données.
+        \item Le facteur de réplication (RF) fixe le nombre de copies. Aucune copie n'est principale.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \centering
+      \begin{tikzpicture}[font=\small,
+        nd/.style={circle,draw=gris,minimum size=0.85cm,fill=white,thick},
+        rep/.style={circle,draw=accent,minimum size=0.85cm,fill=accent!15,thick}]
+        \draw[gris!50,thick] (0,0) circle (1.9);
+        \node[nd] (A) at (90:1.9) {A};
+        \node[rep] (B) at (30:1.9) {B};
+        \node[rep] (C) at (-30:1.9) {C};
+        \node[rep] (D) at (-90:1.9) {D};
+        \node[nd] (E) at (-150:1.9) {E};
+        \node[nd] (F) at (150:1.9) {F};
+        \node[draw,fill=accent,text=white,diamond,inner sep=1pt] (K) at (58:1.9) {\scriptsize K};
+        \draw[->,thick,accent] (K) -- (B);
+        \node[font=\footnotesize,align=center,text=gris] at (0,-2.75) {Clé K dans la plage de B ; avec RF = 3,\\copies sur B, C et D};
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Cohérence ajustable}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \small
+      \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+        \toprule
+        Niveau & Copies qui doivent répondre \\
+        \midrule
+        \cq{ONE} & Une seule : le plus rapide \\
+        \cq{QUORUM} & La majorité : 2 sur 3 si RF = 3 \\
+        \cq{LOCAL_QUORUM} & La majorité dans le datacenter local \\
+        \cq{ALL} & Toutes : une panne bloque la requête \\
+        \bottomrule
+      \end{tabularx}
+    \end{column}
+    \begin{column}{0.41\textwidth}
+      \begin{block}{Lire la dernière écriture}
+        \centering
+        $R + W > RF$\par\medskip
+        \small Avec RF = 3, écrire et lire en \cq{QUORUM} : $2 + 2 = 4 > 3$.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.5cm}
+  \begin{itemize}
+    \item Théorème CAP : lors d'une coupure réseau, on renonce à la cohérence ou à la disponibilité. Cassandra privilégie la disponibilité par défaut.
+    \item PACELC : même sans panne, il reste un compromis entre latence et cohérence.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Tolérance aux pannes}
+  Cassandra n'a pas de point de défaillance unique. Quatre mécanismes se relaient :
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item le \emph{gossip} : chaque nœud échange avec quelques voisins l'état de tous les autres et détecte les pannes ;
+    \item le \emph{hinted handoff} : un nœud garde les écritures destinées à un nœud absent et les lui transmet à son retour (3 heures par défaut) ;
+    \item le \emph{read repair} : si deux copies diffèrent à la lecture, la plus récente est propagée ;
+    \item l'\emph{anti-entropy repair} : \cq{nodetool repair} compare les copies par arbres de Merkle.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Chemin d'écriture et de lecture}
+  \centering
+  \begin{tikzpicture}[font=\footnotesize,
+    box/.style={draw=gris,rounded corners,minimum height=0.8cm,minimum width=2.0cm,align=center,fill=white},
+    arr/.style={-{Stealth},thick,accent}]
+    \node[box,fill=fond] (cl) {Client};
+    \node[box,right=0.6cm of cl,fill=fond] (co) {Nœud\\coordinateur};
+    \node[box,above right=0.1cm and 0.7cm of co,fill=accent!12] (log) {Commit log\\(disque, ajout seul)};
+    \node[box,below right=0.1cm and 0.7cm of co,fill=accent!12] (mem) {Memtable\\(mémoire)};
+    \node[box,right=0.9cm of mem,fill=accent!25] (ss) {SSTable\\(fichier immuable)};
+    \node[box,right=0.6cm of ss,fill=fond] (cp) {Compaction};
+    \draw[arr] (cl) -- (co);
+    \draw[arr] (co) -- (log);
+    \draw[arr] (co) -- (mem);
+    \draw[arr] (mem) -- node[above]{flush} (ss);
+    \draw[arr] (ss) -- (cp);
+  \end{tikzpicture}
+  \vspace{0.4cm}
+  \begin{itemize}
+    \item Le client est confirmé dès que le commit log et la memtable sont à jour : aucune lecture préalable, aucune modification sur place (LSM-tree).
+    \item À la lecture, la memtable et les SSTables sont fusionnées ; la cellule la plus récente l'emporte.
+    \item Un filtre de Bloom signale qu'une SSTable ne contient pas la partition et évite de la lire.
+    \item Une suppression écrit une \emph{tombstone}, effacée à la compaction après \cq{gc_grace_seconds} (10 jours).
+  \end{itemize}
+\end{frame}
+
+% =====================================================
+\section{Performances, systèmes et usages}
+
+\begin{frame}{Ce que l'on gagne, ce que l'on paie}
+  \small
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    Avantage & Contrepartie \\
+    \midrule
+    Montée en charge par ajout de machines, haute disponibilité & Cohérence forte non automatique : il faut choisir les niveaux \\
+    Écritures très rapides (LSM-tree) & Lectures plus coûteuses, compaction en arrière-plan \\
+    Aucune jointure à exécuter à la lecture & Duplication : une table par type de requête \\
+    Schéma souple & Une requête non prévue est coûteuse ou refusée \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{0.5cm}
+  \normalsize
+  \begin{itemize}
+    \item La complexité passe de la lecture (jointures, agrégations) à la conception des tables et à l'écriture.
+    \item Une mauvaise conception se corrige rarement par une requête plus astucieuse : il faut souvent recréer la table.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Principaux systèmes}
+  \small
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.3cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+    \toprule
+     & Cassandra & HBase & ScyllaDB \\
+    \midrule
+    Langage & Java & Java & C++ \\
+    Architecture & Pair-à-pair & Maître + régions, HDFS & Pair-à-pair, un fragment par cœur \\
+    Interface & CQL & API HBase, shell & CQL (compatible Cassandra) \\
+    Cohérence & Ajustable & Forte par ligne & Ajustable \\
+    Point fort & Disponibilité, multi-datacenter & Intégration Hadoop et Spark & Performance par machine \\
+    Limite & Réglage de la JVM, compaction & Déploiement complexe & Écosystème plus restreint \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{0.4cm}
+  \normalsize
+  Google Cloud Bigtable, service géré issu du système d'origine, s'utilise avec l'API de HBase.
+\end{frame}
+
+\begin{frame}{Cas d'utilisation}
+  \begin{columns}[T]
+    \begin{column}{0.53\textwidth}
+      \small
+      \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}X@{}}
+        \toprule
+        Domaine & Partition type \\
+        \midrule
+        IoT & (capteur, jour) \\
+        Journaux (logs) & (service, heure) \\
+        Séries temporelles & (métrique, jour) \\
+        Télécommunications & (abonné, mois) \\
+        Big Data & Clé bien répartie \\
+        \bottomrule
+      \end{tabularx}
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      \begin{block}{Moins adapté}
+        \small
+        Transactions ACID entre tables (comptabilité, virements).\par\medskip
+        Analyse libre, quand les questions ne sont pas connues d'avance.\par\medskip
+        Petits volumes : un serveur relationnel suffit.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.4cm}
+  Les bons usages réunissent beaucoup d'écritures, des requêtes connues d'avance et un besoin de distribution.
+\end{frame}
+
+% =====================================================
+\section{Étude de cas : capteurs IoT avec Cassandra}
+
+\begin{frame}{Partir des requêtes, pas des données}
+  Des capteurs envoient une mesure (température, humidité, batterie) toutes les 10 secondes.
+  \vspace{0.3cm}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \small
+      \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}X@{}}
+        \toprule
+        N° & Requête métier \\
+        \midrule
+        Q1 & Dernières mesures d'un capteur pour un jour \\
+        Q2 & Mesures entre deux heures \\
+        Q3 & Dernière mesure de chaque capteur \\
+        Q4 & Alertes ($>$ 35\,\textdegree C) d'une zone pour un jour \\
+        Q5 & Indicateurs d'une journée \\
+        Q6 & Évolution des indicateurs sur une période \\
+        \bottomrule
+      \end{tabularx}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \small
+      \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X l@{}}
+        \toprule
+        Table & Sert \\
+        \midrule
+        \cq{readings_by_sensor_day} & Q1, Q2, Q5 \\
+        \cq{last_reading_by_sensor} & Q3 \\
+        \cq{alerts_by_zone_day} & Q4 \\
+        \cq{daily_stats_by_sensor} & Q6 \\
+        \bottomrule
+      \end{tabularx}
+      \vspace{0.3cm}
+      Six requêtes, quatre tables : une même mesure est écrite plusieurs fois.
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{La table principale}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+\begin{lstlisting}[language=CQL]
+CREATE TABLE readings_by_sensor_day (
+  sensor_id text,
+  day date,
+  ts timestamp,
+  temperature double,
+  humidity double,
+  battery_pct int,
+  PRIMARY KEY ((sensor_id, day), ts)
+) WITH CLUSTERING ORDER BY (ts DESC)
+  AND default_time_to_live = 7776000
+  AND compaction = {
+    'class': 'TimeWindowCompactionStrategy',
+    'compaction_window_unit': 'DAYS',
+    'compaction_window_size': 1 };
+\end{lstlisting}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \small
+      \begin{itemize}
+        \item Le jour dans la clé de partition borne sa taille : $6 \times 60 \times 24 = 8\,640$ lignes par jour au lieu de 3,15 millions par an (\emph{bucketing}).
+        \item \cq{ts DESC} : Q1 lit les premières lignes, sans tri.
+        \item Expiration après 90 jours et compaction par fenêtres de temps.
+        \item Keyspace répliqué sur 3 nœuds (RF = 3).
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Requêtes avec la clé de partition}
+  \begin{columns}[c]
+    \begin{column}{0.58\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{fig6a_q1_q2.png}
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      \small
+      \begin{itemize}
+        \item Q1 renvoie les mesures dans l'ordre décroissant, sans tri.
+        \item Q2 lit une plage contiguë de la partition.
+        \item Cassandra sait quels nœuds interroger, car la requête donne la clé de partition complète.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Une requête non prévue est refusée}
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig7_allow_filtering.png}
+  \vspace{0.4cm}
+  \begin{itemize}
+    \item Sans clé de partition, il faudrait parcourir toutes les partitions de tous les nœuds.
+    \item \cq{ALLOW FILTERING} force l'exécution : négligeable sur quelques lignes, très lourd sur des millions.
+    \item La bonne réponse est une table conçue pour la question, ici \cq{alerts_by_zone_day}.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Réplication, partitionnement et panne}
+  \begin{columns}[c]
+    \begin{column}{0.55\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{fig10_replication_partitionnement.png}
+    \end{column}
+    \begin{column}{0.41\textwidth}
+      \small
+      \begin{itemize}
+        \item RF = 3 sur 3 nœuds : chaque nœud possède 100\,\% des données de \cq{iot}.
+        \item RF = 1 : chaque capteur est confié au nœud que désigne le hachage de son identifiant.
+        \item Après \cq{docker stop cass3}, Q1 réussit encore en \cq{QUORUM} : deux copies sur trois suffisent.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =====================================================
+\section{Mesures sur dix ans : Cassandra face à PostgreSQL}
+
+\begin{frame}{Protocole}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item 50 capteurs, 5 zones, une mesure toutes les 15 minutes.
+        \item 1\,752\,000 mesures par an ; \textbf{17\,529\,600} sur dix ans (2016 à 2026).
+        \item Mêmes données dans les deux bases, générées avec une graine fixe.
+        \item Mesures après 1, 2, 3, 5 et 10 ans d'historique.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{itemize}
+        \item Cassandra 5.0.9, un nœud, même modèle que l'étude de cas.
+        \item PostgreSQL 15.19, schéma normalisé, clé primaire \cq{(sensor_id, ts)}.
+        \item Médiane de 50 exécutions ; lectures à froid après redémarrage et vidage des caches.
+        \item Scripts et résultats bruts fournis avec le rapport.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Volume stocké}
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig13_volumes.png}
+  \vspace{0.3cm}
+  \small
+  \begin{tabular}{@{}lrrrrr@{}}
+    \toprule
+    Historique & 1 an & 2 ans & 3 ans & 5 ans & 10 ans \\
+    \midrule
+    Cassandra (Mo) & 35 & 69 & 104 & 174 & 349 \\
+    PostgreSQL, table + index (Mo) & 175 & 350 & 526 & 876 & 1\,755 \\
+    \bottomrule
+  \end{tabular}
+  \vspace{0.2cm}
+  \normalsize
+  \par Cinq fois moins de place pour Cassandra : compression LZ4, clé de partition écrite une seule fois.
+\end{frame}
+
+\begin{frame}{Temps de lecture selon le volume}
+  \centering
+  \includegraphics[width=\textwidth]{fig11_latence_volume.png}
+  \vspace{0.2cm}
+  \begin{itemize}
+    \item Cassandra reste entre 3 et 5\,ms de 1 à 10 ans : la partition contient toujours 96 lignes.
+    \item PostgreSQL lit plus vite sur une seule machine, mais Q1 ancien passe de 0,37 à 1,36\,ms.
+    \item Q6, prévue d'avance : 7\,ms (table précalculée) contre 22\,ms (agrégation à chaque appel).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Retrouver une journée de 2016}
+  \begin{columns}[c]
+    \begin{column}{0.56\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{fig14_cassandra_trace.png}
+    \end{column}
+    \begin{column}{0.4\textwidth}
+      \small
+      \begin{itemize}
+        \item Le nœud ne parcourt pas l'historique.
+        \item Les filtres de Bloom écartent 3 SSTables sur 4 ; un seul fichier est lu.
+        \item 3,9\,ms dans le serveur, dont 1,7\,ms pour analyser et préparer la requête.
+        \item Une journée vieille de dix ans coûte autant qu'une journée de la semaine.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Lecture à froid et requête non prévue}
+  \centering
+  \includegraphics[width=\textwidth]{fig12_froid_parcours.png}
+  \vspace{0.1cm}
+  \begin{itemize}
+    \item À froid, Cassandra est à chaque volume aussi rapide ou plus rapide (15 à 55\,ms contre 26 à 172\,ms).
+    \item La requête non prévue croît d'environ 2\,s par an chez Cassandra et échoue à dix ans.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{La requête non prévue à dix ans}
+  \centering
+  \includegraphics[width=0.88\textwidth]{fig16_requete_non_prevue.png}
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item Cassandra interrompt le parcours au bout de 12\,s (\cq{ReadTimeout}), six fois sur six.
+    \item Avec le délai relevé, elle trouve les mêmes 15\,699 mesures en 20,7\,s.
+    \item PostgreSQL répond toujours, mais en 16 à 24\,s : la table ne tient plus en mémoire.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Synthèse des mesures}
+  \small
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    Critère & Cassandra & PostgreSQL \\
+    \midrule
+    Lecture par clé, données en mémoire & 3 à 5\,ms, constant de 1 à 10 ans & 0,3 à 1,6\,ms, en hausse avec le volume \\
+    Donnée ancienne & Même coût qu'une donnée récente & Même coût qu'une donnée récente \\
+    Lecture à froid & 15 à 55\,ms & 26 à 172\,ms \\
+    Question prévue (Q6) & 7\,ms & 22\,ms \\
+    Question imprévue (10 ans) & Échec à 12\,s ; 20,7\,s délai relevé & 16 à 24\,s \\
+    Écritures une par une & \textbf{2\,504} par seconde & 305 par seconde \\
+    Espace disque (10 ans) & \textbf{349\,Mo} & 1\,755\,Mo \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{0.4cm}
+  \normalsize
+  \par Mesures sur une seule machine : l'atout principal de Cassandra, l'ajout de nœuds, n'y apparaît pas.
+\end{frame}
+
+% =====================================================
+\section{Étude comparative}
+
+\begin{frame}{Relationnel et Wide-Column, critère par critère}
+  \footnotesize
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    Critère & Relationnel (PostgreSQL) & Wide-Column (Cassandra) \\
+    \midrule
+    Conception & À partir des données & À partir des requêtes \\
+    Schéma de l'étude de cas & 2 tables, sans duplication & 4 tables, mesures dupliquées \\
+    Jointures & À la lecture & Remplacées par la duplication \\
+    Transactions & ACID sur plusieurs tables & Lot atomique, transactions légères \\
+    Montée en charge & Serveur plus puissant & Ajout de nœuds \\
+    Lecture par clé (mesurée) & 0,3 à 1,6\,ms, en hausse & 3 à 5\,ms, constante sur 10 ans \\
+    Écritures unitaires (mesurées) & 305 /s & 2\,504 /s \\
+    Espace disque, 10 ans (mesuré) & 1\,755\,Mo & 349\,Mo \\
+    Question imprévue (mesurée) & Exécutée, 16 à 24\,s & Échec à 12\,s \\
+    Nouveau besoin & Nouvelle requête & Nouvelle table + migration \\
+    \bottomrule
+  \end{tabularx}
+\end{frame}
+
+\begin{frame}{Études de cas comparatives}
+  \small
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.2cm}@{}}
+    \toprule
+    Cas & Conception relationnelle & Conception Wide-Column & Retenu \\
+    \midrule
+    Capteurs IoT & \cq{readings(sensor_id, ts)} indexée & \cq{((sensor_id, day), ts)} & Wide-Column \\
+    Messagerie & \cq{messages} indexée par conversation & \cq{((conversation_id, mois), date)} & Wide-Column \\
+    Commandes en ligne & Stock, paiement, lignes dans une transaction ACID & Plusieurs tables sans transaction commune & Relationnel \\
+    Journaux applicatifs & Table qui grossit, purge par \cq{DELETE} & \cq{((service, heure), date)} + TTL & Wide-Column \\
+    \bottomrule
+  \end{tabularx}
+  \vspace{0.4cm}
+  \normalsize
+  \begin{itemize}
+    \item Le choix dépend de la nature des accès plus que de la taille.
+    \item Requêtes connues, écritures nombreuses, distribution : Wide-Column.
+    \item Transactions entre entités, questions changeantes : relationnel. Beaucoup de systèmes combinent les deux.
+  \end{itemize}
+\end{frame}
+
+% =====================================================
+\section{Du relationnel au Wide-Column}
+
+\begin{frame}{Peut-on passer du relationnel au Wide-Column ?}
+  Oui. Il n'y a pas de conversion automatique : on refait le schéma en partant des requêtes, puis on recopie les données.
+  \vspace{0.3cm}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{enumerate}
+        \item Inventorier les requêtes de l'application (code, \cq{pg_stat_statements}).
+        \item Garder le modèle conceptuel (entités, associations).
+        \item Concevoir une table par requête fréquente.
+        \item Choisir les clés : égalités en partition, plages et tri en clustering, période pour borner.
+      \end{enumerate}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{enumerate}\setcounter{enumi}{4}
+        \item Fixer TTL, compaction, réplication.
+        \item Migrer l'historique : jointures et agrégations faites à l'export.
+        \item Vérifier : comptages et mêmes réponses dans les deux bases.
+        \item Basculer : double écriture ou capture des changements (Debezium, Kafka), puis lectures sur Cassandra.
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Règles de correspondance}
+  \small
+  \begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}X@{}}
+    \toprule
+    Relationnel & Wide-Column (Cassandra) \\
+    \midrule
+    Table normalisée & Plusieurs tables dénormalisées, une par requête \\
+    Jointure, clé étrangère & Colonnes recopiées dans la table qui en a besoin \\
+    Association 1-N & Lignes filles dans la partition du parent, triées par clustering \\
+    Association N-N & Deux tables, une par sens de lecture \\
+    \cq{GROUP BY} fréquent & Table précalculée \\
+    Index secondaire & Table dédiée à la requête \\
+    Contrainte d'intégrité & Contrôle par l'application \\
+    Transaction sur plusieurs tables & \cq{BATCH} logué ou transaction légère (\cq{IF NOT EXISTS}) \\
+    Identifiant auto-incrémenté & \cq{uuid} ou \cq{timeuuid} \\
+    \bottomrule
+  \end{tabularx}
+\end{frame}
+
+\begin{frame}[fragile]{Application à notre schéma}
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \small
+      \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{2.3cm}@{}}
+        \toprule
+        Table Cassandra & Export SQL \\
+        \midrule
+        \cq{readings_by_sensor_day} & \cq{ts::date} \\
+        \cq{alerts_by_zone_day} & jointure \cq{sensors} \\
+        \cq{daily_stats_by_sensor} & \cq{GROUP BY} \\
+        \cq{last_reading_by_sensor} & \cq{LATERAL} \\
+        \bottomrule
+      \end{tabularx}
+      \vspace{0.3cm}
+      Le travail que PostgreSQL faisait à chaque lecture est fait une seule fois, à l'export.
+    \end{column}
+    \begin{column}{0.5\textwidth}
+\begin{lstlisting}[language=SQL]
+-- psql : export de la table des alertes
+\copy (SELECT s.zone, r.ts::date, ...,
+         r.sensor_id, r.temperature
+       FROM readings r JOIN sensors s
+         ON s.sensor_id = r.sensor_id
+       WHERE r.temperature > 35)
+  TO '/tmp/alerts.csv' WITH (FORMAT csv)
+\end{lstlisting}
+\begin{lstlisting}[language=CQL]
+// cqlsh : import
+COPY iot_migre.alerts_by_zone_day
+  (zone, day, ts, sensor_id, temperature)
+  FROM '/tmp/alerts.csv';
+\end{lstlisting}
+      \scriptsize\color{gris} Procédure complète : dossier \texttt{migration/} (\texttt{migrer.sh}).
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% =====================================================
+\section{Conclusion}
+
+\begin{frame}{Conclusion}
+  \begin{itemize}
+    \item Les bases Wide-Column stockent de très grands volumes arrivant en continu, sur des machines ordinaires, sans point de défaillance unique.
+    \item Elles reposent sur le partitionnement par hachage, la réplication sans maître, la cohérence réglable et l'écriture en ajout seul.
+    \item En retour, il faut connaître les requêtes avant de créer les tables, accepter la duplication et renoncer aux jointures.
+    \item Sur dix ans de mesures, le temps de lecture de Cassandra n'a pas bougé avec le volume ; la requête imprévue a fini par échouer.
+    \item En pratique, on associe souvent une base Wide-Column pour l'ingestion et un entrepôt colonnaire pour l'analyse.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[plain,noframenumbering]
+  \centering
+  \vfill
+  {\usebeamercolor[fg]{title}\Large\bfseries Merci pour votre attention\par}
+  \vspace{0.3cm}
+  {\color{accent!35}\rule{0.4\linewidth}{0.5pt}\par}
+  \vspace{0.3cm}
+  {\color{gris}Questions et échanges\par}
+  \vfill
+\end{frame}
+
+\begin{frame}{Références principales}
+  \footnotesize
+  \begin{itemize}
+    \item F. Chang, J. Dean, S. Ghemawat et al. \emph{Bigtable: A Distributed Storage System for Structured Data}. OSDI, 2006.
+    \item G. DeCandia, D. Hastorun et al. \emph{Dynamo: Amazon's Highly Available Key-value Store}. SOSP, 2007.
+    \item A. Lakshman, P. Malik. \emph{Cassandra: A Decentralized Structured Storage System}. ACM SIGOPS OSR, 44(2), 2010.
+    \item P. O'Neil, E. Cheng, D. Gawlick, E. O'Neil. \emph{The Log-Structured Merge-Tree (LSM-Tree)}. Acta Informatica, 1996.
+    \item S. Gilbert, N. Lynch. \emph{Brewer's Conjecture and the Feasibility of Consistent, Available, Partition-Tolerant Web Services}. 2002.
+    \item D. Abadi. \emph{Consistency Tradeoffs in Modern Distributed Database System Design}. IEEE Computer, 2012.
+    \item A. Chebotko, A. Kashlev, S. Lu. \emph{A Big Data Modeling Methodology for Apache Cassandra}. IEEE BigData Congress, 2015.
+    \item Documentation Apache Cassandra : \texttt{cassandra.apache.org/doc/latest}
+  \end{itemize}
+\end{frame}
+
+\end{document}
